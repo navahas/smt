@@ -32,7 +32,7 @@ pub fn hash_pair(left: [u8; 32], right: [u8; 32]) -> [u8; 32] {
 }
 
 pub fn precompute_zero_hashes(max_levels: usize) -> Vec<[u8; 32]> {
-    let mut zero = Vec::new();
+    let mut zero = Vec::with_capacity(max_levels);
     zero.push(keccak(&[]));
     for lvl in 0..max_levels {
         let z = zero[lvl];
@@ -41,6 +41,6 @@ pub fn precompute_zero_hashes(max_levels: usize) -> Vec<[u8; 32]> {
     zero
 }
 
-pub fn hash_to_string(hash: &[u8]) -> String {
-    to_hex(&hash)
+pub fn hash_to_string(hash: &[u8; 32]) -> String {
+    to_hex(hash)
 }

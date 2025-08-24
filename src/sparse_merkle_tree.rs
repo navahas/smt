@@ -9,32 +9,25 @@ pub struct SparseMerkleTree {
     leaves: Vec<Vec<[u8; 32]>>,
     // precomputed hashes per level
     zero: Vec<[u8; 32]>,
-    root: Option<[u8; 32]>,
+    root: [u8; 32],
     max_leaves: usize,
     max_levels: usize,
 }
 
 impl SparseMerkleTree {
     pub fn new() -> Self {
-        Self {
-            leaves: Vec::new(),
-            zero: Vec::new(),
-            root: None,
-            max_leaves: MAX_LEAVES,
-            max_levels: MAX_LEVELS,
-        }
-    }
-
-    pub fn init(&self) -> Self {
-        let zero_leaves = precompute_zero_hashes(self.max_levels);
-        let root = zero_leaves[self.max_levels];
+        let zero_leaves = precompute_zero_hashes(MAX_LEVELS);
+        let root = zero_leaves[MAX_LEVELS];
         Self {
             leaves: Vec::new(),
             zero: zero_leaves,
-            root: Some(root),
+            root: root,
             max_levels: MAX_LEVELS,
             max_leaves: MAX_LEVELS
         }
     }
 
+    pub fn root(&self) -> [u8; 32] {
+        self.root
+    }
 }
