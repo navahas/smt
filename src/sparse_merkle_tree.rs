@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use crate::utils::*;
 
-const MAX_LEVELS: usize = 8;
+const MAX_LEVELS: usize = 32;
 const MAX_LEAVES: usize = 1 << MAX_LEVELS; // bitwise for 2^x
 
 #[derive(Debug)]
@@ -33,7 +33,7 @@ impl SparseMerkleTree {
 
     pub fn insert(&mut self, key: [u8; 32], value: [u8; 32]) {
         self.leaves.insert(key, value);
-        self.root = self.compute_root();
+        //self.root = self.compute_root();
     }
 
     fn compute_root(&self) -> [u8; 32] {
