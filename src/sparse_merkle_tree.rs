@@ -36,6 +36,75 @@ impl SparseMerkleTree {
         //self.root = self.compute_root();
     }
 
+    pub fn verify_inclusion(&self, key: [u8; 32], value: [u8; 32]) -> bool {
+        match self.leaves.get(&key) {
+            Some(stored_value) => *stored_value == value,
+            None => false,
+        }
+    }
+
+    pub fn get_proof(&self, key: [u8; 32]) -> Option<Vec<[u8; 32]>> {
+        if !self.leaves.contains_key(&key) {
+            return None;
+        }
+
+        let path = self.key_to_path(&key);
+        let mut proof = Vec::new();
+        let mut current_level: HashMap<Vec<bool>, [u8; 32]> = HashMap::new();
+
+        for (k, value) in &self.leaves {
+            let k_path = self.key_to_path(k);
+            current_level.insert(k_path, *value);
+        }
+
+        for level in (0..self.max_levels).rev() {
+            let mut next_level: HashMap<Vec<bool>, [u8; 32]> = HashMap::new();
+            let mut parent_children: HashMap<Vec<bool>, (Option<[u8; 32]>, Option<[u8; 32]>)> = HashMap::new();
+
+            for (node_path, hash) in &current_level {
+                if node_path.len() > level {
+                    let parent_path = node_path[..level].to_vec();
+                    let is_right = node_path[level];
+                    
+                    let entry = parent_children.entry(parent_path).or_insert((None, None));
+                    if is_right {
+                        entry.1 = Some(*hash);
+                    } else {
+                        entry.0 = Some(*hash);
+                    }
+                }
+            }
+
+            if level < path.len() {
+                let current_path = path[..level].to_vec();
+                if let Some((left, right)) = parent_children.get(&current_path) {
+                    let sibling = if path[level] {
+                        left.unwrap_or(self.zero[level + 1])
+                    } else {
+                        right.unwrap_or(self.zero[level + 1])
+                    };
+                    proof.push(sibling);
+                } else {
+                    proof.push(self.zero[level + 1]);
+                }
+            }
+
+            for (parent_path, (left, right)) in parent_children {
+                let left_hash = left.unwrap_or(self.zero[level + 1]);
+                let right_hash = right.unwrap_or(self.zero[level + 1]);
+                
+                if left_hash != self.zero[level + 1] || right_hash != self.zero[level + 1] {
+                    let parent_hash = hash_pair(left_hash, right_hash);
+                    next_level.insert(parent_path, parent_hash);
+                }
+            }
+            
+            current_level = next_level;
+        }
+
+        Some(proof)
+    }
+
     fn compute_root(&self) -> [u8; 32] {
         let mut current_level: HashMap<Vec<bool>, [u8; 32]> = HashMap::new();
         

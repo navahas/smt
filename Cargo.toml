@@ -13,3 +13,7 @@ criterion = "0.7.0"
 [[bench]]
 name = "sparse_insert"
 harness = false
+
+[[bench]]
+name = "sparse_proof"
+harness = false
