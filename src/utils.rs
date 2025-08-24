@@ -17,16 +17,30 @@ pub fn to_hex_prefixed(bytes: &[u8]) -> String {
     format!("0x{}", hex)
 }
 
-pub fn hash(data: &[u8]) -> Vec<u8> {
+#[inline]
+pub fn keccak(data: &[u8]) -> [u8; 32] {
     let mut hasher = Keccak256::new();
     hasher.update(data);
-    let result: Vec<u8> = hasher.finalize().to_vec();
-    result
+    hasher.finalize().into()
 }
 
-pub fn hash_to_string(data: &[u8]) -> String {
-    let mut hasher = Keccak256::new();
-    hasher.update(data);
-    let result: [u8; 32] = hasher.finalize().into();
-    to_hex(&result)
+pub fn hash_pair(left: [u8; 32], right: [u8; 32]) -> [u8; 32] {
+    let mut h_pair = Keccak256::new();
+    h_pair.update(left);
+    h_pair.update(right);
+    h_pair.finalize().into()
+}
+
+pub fn precompute_zero_hashes(max_levels: usize) -> Vec<[u8; 32]> {
+    let mut zero = Vec::new();
+    zero.push(keccak(&[]));
+    for lvl in 0..max_levels {
+        let z = zero[lvl];
+        zero.push(hash_pair(z, z));
+    }
+    zero
+}
+
+pub fn hash_to_string(hash: &[u8]) -> String {
+    to_hex(&hash)
 }
